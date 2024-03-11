@@ -1,7 +1,3 @@
-# Assignment 1
-# Name: Aathushan Kugendran
-# Student ID: 501178236
-
 """
 Objective: The objective of my code is to determine the MVP of the 2021-2022 Regular NBA Season based off basic stats,
 that the average human being witnesses while watching a game. The stats that are being compared are the season avg
