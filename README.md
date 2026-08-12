@@ -2,7 +2,7 @@
 
 **A retro, arcade-styled site that tracks real NBA, NFL, and MLB season awards — MVP races, Defensive/Offensive Player of the Year, Rookies of the Year, and more — with a built-in terminal you can query directly.**
 
-🔗 **Live Demo:** _add your Amplify URL here once deployed_
+🔗 **Live Demo:** [Demo Link](https://main.d35rjithlnhcvg.amplifyapp.com/)
 📦 **Repo:** [github.com/aathushankugendran/NBA-MVP-Analyzer](https://github.com/aathushankugendran/NBA-MVP-Analyzer)
 
 ---
