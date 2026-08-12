@@ -1,108 +1,84 @@
-# NBA MVP Analyzer
+# NBA-MVP-Analyzer
 
-## Overview
-The **NBA MVP Analyzer** is a command-line program designed to determine the **Most Valuable Player (MVP)** of the NBA **2021-2022 Regular Season** based on fundamental statistics: **points, rebounds, and assists**. These stats represent the key performance metrics that an average basketball fan observes during a game. The program applies a rule-based comparison system to identify the best-performing player among multiple candidates.
+**A retro, arcade-styled site that tracks real NBA, NFL, and MLB season awards — MVP races, Defensive/Offensive Player of the Year, Rookies of the Year, and more — with a built-in terminal you can query directly.**
 
-## Features
-- **Analyzes basic statistics (PPG, RPG, APG)** to determine the MVP.
-- **Handles tie-breakers** by prioritizing points, rebounds, and assists in order.
-- **Compares multiple player performances** and selects the most valuable contributor.
-- **Simple command-line interface** with straightforward outputs.
-- **Works with different datasets**, allowing for historical analysis.
+🔗 **Live Demo:** _add your Amplify URL here once deployed_
+📦 **Repo:** [github.com/aathushankugendran/NBA-MVP-Analyzer](https://github.com/aathushankugendran/NBA-MVP-Analyzer)
 
-## Technology Stack
-- **Python**: Main programming language.
-- **Standard I/O Handling**: Reads and processes input efficiently.
+---
 
-## Installation
-1. **Clone the Repository:**
-   ```sh
-   git clone https://github.com/yourusername/nba-mvp-analyzer.git
-   ```
-2. **Navigate to the Project Directory:**
-   ```sh
-   cd nba-mvp-analyzer
-   ```
-3. **Run the Program:**
-   ```sh
-   python mvp_analyzer.py
-   ```
+## What This Project Is
 
-## How It Works
-### Algorithm Explanation
-1. **Stores predefined stats** for five NBA players (PPG, RPG, APG).
-2. **Iterates through stats (points, rebounds, assists) to find leaders**.
-3. **Counts occurrences** of each player leading in a category.
-4. **Handles tie-breakers** by prioritizing points (since basketball is a scoring game).
-5. **Prints the MVP based on the highest occurrence count or tie-break rule**.
-6. **Allows user to exit program by typing 'END'**.
+This started as a small interview case study: `a1.py`, a command-line script that took five hardcoded NBA MVP candidates, compared their points/rebounds/assists, and printed a winner using a simple tie-break rule.
 
-### Sample Output
+I kept building on it because the underlying idea — turning a real awards race into something explorable, not just a static list — was worth taking further. It grew into three things:
+
+1. **A retro front-end site** (`index.html`) with a league toggle (NBA / NFL / MLB), real 2025-26 season award data, winner highlighting, and a built-in retro terminal you can type commands into to query the data live.
+2. **A backend** (`backend/`) with the same data as structured JSON, Python CLI analyzers that mirror the original `a1.py` idea (now data-driven and multi-league instead of hardcoded), and a small Flask API for anyone who wants to extend this beyond a static site.
+3. **The original script** (`a1.py`), kept as-is — the seed the rest of this grew from.
+
+## How It's Architected
+
+The site is a **plain static HTML/JS page** — no build step, no framework, no server required to run it. It fetches its data directly from the JSON files in `backend/data/` using relative paths, which is what makes it deployable as-is on GitHub Pages, AWS Amplify Hosting, or any static host with zero configuration.
+
+The **Flask API and CLI analyzers in `backend/`** aren't required for the site to work — they exist as a separate, optional layer: a real backend you can run locally, hit with `curl`, or build on top of if this ever needs to pull live stats instead of a point-in-time dataset. The site is intentionally decoupled from it so a recruiter (or anyone) can open the live link and have it just work, without a server running somewhere to keep alive.
+
 ```
-The Regular NBA Season stats of Joel Embiid are: [30.6, 11.7, 4.2]
-The Regular NBA Season stats of Nikola Jokić are: [27.1, 13.8, 7.9]
-The Regular NBA Season stats of Giannis Antetokounmpo are: [29.9, 11.6, 5.8]
-The Regular NBA Season stats of Devin Booker are: [26.8, 5.0, 4.8]
-The Regular NBA Season stats of Luka Dončić are: [28.4, 9.1, 8.7]
-
-Joel Embiid is the MVP with: 30.6 points, 11.7 rebounds & 4.2 assists!
-
-Type 'END' to end the program!
+NBA-MVP-Analyzer/
+├── a1.py                        original 5-player NBA MVP script
+├── index.html                   the retro site (NBA/NFL/MLB, no build step)
+├── README.md
+└── backend/
+    ├── data/
+    │   ├── nba_2025_26.json     MVP, DPOY, 6MOY, MIP, ROY, COY, All-NBA
+    │   ├── nfl_2025.json        MVP, OPOY, DPOY, both ROYs, Comeback POY
+    │   └── mlb_2025.json        AL + NL MVP, Cy Young, ROY, Manager, Comeback POY
+    ├── analyzers/
+    │   ├── mvp_analyzer.py      CLI: real MVP race breakdown, per league
+    │   └── awards_analyzer.py   CLI: every award winner, per league
+    ├── app.py                   Flask API serving the same JSON as endpoints
+    ├── requirements.txt
+    └── README.md                 backend-specific docs
 ```
 
-## Inefficiencies & Possible Improvements
-### **Current Inefficiencies:**
-1. **Hardcoded player stats:**
-   - The program manually stores stats in predefined lists.
-   - This makes it inflexible to new data or other NBA seasons.
-2. **Nested conditional checks:**
-   - Uses multiple `if-elif` statements for comparisons.
-   - Increases complexity and reduces maintainability.
-3. **Tie-breaker implementation:**
-   - Currently uses a static rule-based approach.
-   - Does not dynamically adapt to more complex scenarios.
+## Running the Site
 
-### **Optimization Strategies:**
-1. **Use a Data Structure (Dictionary or JSON):**
-   - Store players' stats dynamically in a dictionary instead of hardcoding lists.
-   - Example:
-     ```python
-     players = {
-         "Joel Embiid": {"PPG": 30.6, "RPG": 11.7, "APG": 4.2},
-         "Nikola Jokic": {"PPG": 27.1, "RPG": 13.8, "APG": 7.9},
-         "Giannis Antetokounmpo": {"PPG": 29.9, "RPG": 11.6, "APG": 5.8},
-     }
-     ```
-   - This allows easy modifications and supports loading data from external sources.
+No install, no build:
 
-2. **Refactor `if-elif` conditions into a loop:**
-   - Instead of manually comparing each stat, loop through the dataset dynamically.
-   - Example:
-     ```python
-     stat_categories = ["PPG", "RPG", "APG"]
-     leader_counts = {player: 0 for player in players}
-     
-     for stat in stat_categories:
-         best_player = max(players, key=lambda p: players[p][stat])
-         leader_counts[best_player] += 1
-     ```
-   - This removes redundant `if-elif` checks, making the program more scalable.
+```bash
+python3 -m http.server 8000
+```
 
-3. **Make MVP selection dynamic:**
-   - Currently, it assumes a tie-break is necessary only in some cases.
-   - A weighted ranking system (e.g., assigning scores based on rank in each stat) would be more flexible.
+then open `http://localhost:8000/index.html`. (Opening the file directly via double-click won't work — browsers block `fetch()` of local files over `file://`, so it needs to be served, even locally.)
 
-## Future Enhancements
-- **Allow user input for custom NBA stats** instead of hardcoded values.
-- **Implement a web scraper** to fetch real-time NBA player statistics.
-- **Integrate visualization tools (Matplotlib, Seaborn)** to represent MVP analysis graphically.
-- **Use a database (SQLite/PostgreSQL)** to store historical MVP stats.
-- **Enhance tie-breaking logic with advanced metrics** (e.g., player efficiency rating, usage rate).
+## Running the Backend (optional)
 
-## License
-This project is licensed under the **MIT License**.
+```bash
+cd backend
+pip install -r requirements.txt
 
-## Contact
-**Author:** Aathushan Kugendran  
-**Email:** aathushankugendran@gmail.com  
-**GitHub:** [AathushanKugendran](https://github.com/aathushankugendran)
+# CLI
+cd analyzers
+python mvp_analyzer.py --league nba
+python mvp_analyzer.py --league mlb --division NL
+
+# or the API
+cd ..
+python app.py
+```
+
+See `backend/README.md` for full endpoint docs.
+
+## Data
+
+All figures are real, pulled from official league sources and major outlets (NBA.com, NFL.com, MLB.com/BBWAA, ESPN, CBS Sports) as of each award's announcement date — NBA: May 2026, NFL: Feb 2026, MLB: Nov 2025. This is a point-in-time snapshot, not a live feed; each JSON file notes its source and date.
+
+## What's Next
+
+- Wire the site to the Flask API for live-updating data instead of a static snapshot
+- Add historical seasons instead of just the current one per league
+- Expand the terminal's command set (career stat lookups, head-to-head comparisons)
+
+---
+
+*Built by [Aathushan Kugendran](https://github.com/aathushankugendran)*
