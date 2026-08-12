@@ -807,10 +807,16 @@
     termBody.addEventListener('click', () => termInput.focus());
   }
 
-  // ---------- LIVE BACKEND CONNECTION ----------
-  // Change this if your Flask server is running on a different port
-  // (macOS AirPlay Receiver often squats on 5000, hence 5001 here).
-  const API_BASE = 'http://localhost:5001';
+  // ---------- STATIC DATA CONNECTION ----------
+  // Reads the same JSON files the Flask backend serves, directly from
+  // the repo — no server required. This is what makes the site deployable
+  // as a plain static site (GitHub Pages, AWS Amplify Hosting, S3, etc.)
+  // with zero build step and zero backend process to keep alive.
+  const DATA_PATHS = {
+    nba: './backend/data/nba_2025_26.json',
+    nfl: './backend/data/nfl_2025.json',
+    mlb: './backend/data/mlb_2025.json'
+  };
 
   function normalizeFinalists(list) {
     if (!Array.isArray(list)) return [];
@@ -903,7 +909,7 @@
   }
 
   async function fetchLeague(league) {
-    const res = await fetch(`${API_BASE}/api/${league}/awards`, { mode: 'cors' });
+    const res = await fetch(DATA_PATHS[league]);
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     return res.json();
   }
@@ -917,14 +923,14 @@
       const inputRow = termBody.querySelector('.terminal-input-row');
       const statusLine = document.createElement('div');
       statusLine.className = 'term-line hl';
-      statusLine.textContent = `[connected to live backend at ${API_BASE}]`;
+      statusLine.textContent = `[dataset loaded from ${DATA_PATHS[league]}]`;
       termBody.insertBefore(statusLine, inputRow);
     } catch (err) {
       buildTerminal(bodyId, inputId, fallbackData, league.toUpperCase());
       const inputRow = termBody.querySelector('.terminal-input-row');
       const statusLine = document.createElement('div');
       statusLine.className = 'term-line err';
-      statusLine.textContent = `[backend not reachable at ${API_BASE} — using built-in cached dataset. Run "python app.py" in /backend to go live.]`;
+      statusLine.textContent = `[couldn't load ${DATA_PATHS[league]} — using built-in cached dataset. Serve this site over http:// (not file://) for live JSON loading, e.g. "python -m http.server".]`;
       termBody.insertBefore(statusLine, inputRow);
     }
   }
