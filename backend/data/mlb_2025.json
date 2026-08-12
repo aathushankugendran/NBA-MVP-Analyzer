@@ -1,0 +1,85 @@
+{
+  "league": "MLB",
+  "season": "2025",
+  "announced_at": "MLB Awards, November 10-13, 2025, Las Vegas",
+  "mvp": {
+    "AL": {
+      "winner": "Aaron Judge",
+      "team": "New York Yankees",
+      "vote_summary": "17-13 first-place votes over Cal Raleigh — closest AL MVP race since 2019",
+      "stats": { "avg": 0.331, "obp": 0.457, "slg": 0.688, "ops": 1.145, "hr": 53, "runs": 137, "bwar": 10.1 },
+      "note": "Third AL MVP, second straight.",
+      "finalists": [
+        { "name": "Aaron Judge", "team": "New York Yankees", "result": "1st (Winner)" },
+        {
+          "name": "Cal Raleigh",
+          "team": "Seattle Mariners",
+          "stats": { "hr": 60, "rbi": 125, "bwar": 9.0 },
+          "note": "Set single-season HR records for catchers and switch-hitters.",
+          "result": "2nd"
+        }
+      ]
+    },
+    "NL": {
+      "winner": "Shohei Ohtani",
+      "team": "Los Angeles Dodgers",
+      "vote_summary": "Unanimous — 4th career MVP, 2nd straight NL MVP",
+      "stats": { "avg": 0.282, "obp": 0.374, "slg": 0.582, "hr": 55, "rbi": 102, "bwar_hitting": 6.6, "pitching_era": 2.87 },
+      "finalists": [
+        { "name": "Shohei Ohtani", "team": "Los Angeles Dodgers", "result": "1st (Winner, unanimous)" },
+        {
+          "name": "Kyle Schwarber",
+          "team": "Philadelphia Phillies",
+          "stats": { "hr": 56, "rbi": 132, "bwar": 4.7 },
+          "result": "2nd"
+        },
+        {
+          "name": "Juan Soto",
+          "team": "New York Mets",
+          "stats": { "avg": 0.263, "hr": 43, "rbi": 105, "bwar": 6.2 },
+          "result": "3rd"
+        }
+      ]
+    }
+  },
+  "cy_young": {
+    "AL": { "winner": "Tarik Skubal", "team": "Detroit Tigers", "note": "Back-to-back AL Cy Young." },
+    "NL": { "winner": "Paul Skenes", "team": "Pittsburgh Pirates", "vote_summary": "Unanimous", "note": "First Cy Young, a season after winning NL Rookie of the Year." }
+  },
+  "rookie_of_the_year": {
+    "AL": {
+      "winner": "Nick Kurtz",
+      "team": "Athletics",
+      "position": "1B",
+      "vote_summary": "Unanimous",
+      "stats": { "avg": 0.290, "obp": 0.383, "slg": 0.619, "hr": 36, "rbi": 86, "bwar": 5.4 },
+      "note": "First rookie ever to hit 4 home runs in a single game (July 25, 2025 vs. Astros)."
+    },
+    "NL": {
+      "winner": "Drake Baldwin",
+      "team": "Atlanta Braves",
+      "position": "C",
+      "vote_summary": "21/30 first-place votes",
+      "note": "Beat out Cade Horton (Cubs) and Caleb Durbin (Brewers)."
+    }
+  },
+  "manager_of_the_year": {
+    "AL": { "winner": "Stephen Vogt", "team": "Cleveland Guardians", "note": "Back-to-back AL Manager of the Year." },
+    "NL": { "winner": "Pat Murphy", "team": "Milwaukee Brewers", "note": "Back-to-back NL Manager of the Year. Brewers went 97-65, best record in MLB." }
+  },
+  "comeback_player_of_the_year": {
+    "AL": { "winner": "Jacob deGrom", "team": "Texas Rangers" },
+    "NL": { "winner": "Ronald Acuña Jr.", "team": "Atlanta Braves" }
+  },
+  "world_series": { "champion": "Los Angeles Dodgers", "note": "Back-to-back World Series champions." },
+  "all_mlb_first_team_highlights": [
+    "Vladimir Guerrero Jr.",
+    "Juan Soto",
+    "Aaron Judge",
+    "Cal Raleigh",
+    "Shohei Ohtani",
+    "Tarik Skubal",
+    "Paul Skenes"
+  ],
+  "source_note": "Compiled from MLB.com, BBWAA, ESPN, and CBS Sports MLB Awards Week coverage, November 2025."
+}

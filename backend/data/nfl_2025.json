@@ -1,0 +1,83 @@
+{
+  "league": "NFL",
+  "season": "2025",
+  "announced_at": "NFL Honors, February 5, 2026",
+  "mvp": {
+    "award_name": "AP Most Valuable Player",
+    "winner": "Matthew Stafford",
+    "vote_summary": "366 points (24 first-place votes) — closest MVP race since 2003",
+    "finalists": [
+      {
+        "name": "Matthew Stafford",
+        "team": "Los Angeles Rams",
+        "position": "QB",
+        "stats": { "pass_yards": 4707, "pass_td": 46, "interceptions": 8, "rating": 109.2 },
+        "note": "First MVP of his 17-year career. Oldest first-time winner in NFL history at 37.",
+        "result": "1st (Winner)"
+      },
+      {
+        "name": "Drake Maye",
+        "team": "New England Patriots",
+        "position": "QB",
+        "vote_summary": "361 points (23 first-place votes)",
+        "result": "2nd"
+      },
+      {
+        "name": "Josh Allen",
+        "team": "Buffalo Bills",
+        "position": "QB",
+        "stats": { "pass_yards": 3668, "pass_td": 25, "rush_yards": 579, "rush_td": 14, "total_td": 39 },
+        "result": "Other first-place votes (2)"
+      }
+    ]
+  },
+  "offensive_player_of_the_year": {
+    "winner": "Jaxon Smith-Njigba",
+    "vote_summary": "272 points (14 first-place votes)",
+    "finalists": [
+      {
+        "name": "Jaxon Smith-Njigba",
+        "team": "Seattle Seahawks",
+        "position": "WR",
+        "stats": { "receiving_yards": 1793 },
+        "note": "Led the NFL in receiving yards; set Seahawks franchise record.",
+        "result": "1st (Winner)"
+      },
+      {
+        "name": "Christian McCaffrey",
+        "team": "San Francisco 49ers",
+        "position": "RB",
+        "stats": { "scrimmage_yards": 2126, "total_td": 17 },
+        "vote_summary": "223 points (12 first-place votes)",
+        "result": "2nd"
+      },
+      { "name": "Puka Nacua", "team": "Los Angeles Rams", "position": "WR", "vote_summary": "170 points (8 first-place votes)", "result": "3rd" }
+    ]
+  },
+  "defensive_player_of_the_year": {
+    "winner": "Myles Garrett",
+    "vote_summary": "Unanimous",
+    "finalists": [
+      {
+        "name": "Myles Garrett",
+        "team": "Cleveland Browns",
+        "position": "DE",
+        "stats": { "sacks": 23 },
+        "note": "NFL single-season sack record, breaking the mark held by Michael Strahan and T.J. Watt. Two-time DPOY.",
+        "result": "1st (Winner, unanimous)"
+      }
+    ]
+  },
+  "offensive_rookie_of_the_year": { "winner": "Tetairoa McMillan", "team": "Carolina Panthers", "position": "WR" },
+  "defensive_rookie_of_the_year": { "winner": "Carson Schwesinger", "team": "Cleveland Browns", "position": "LB" },
+  "comeback_player_of_the_year": {
+    "winner": "Christian McCaffrey",
+    "team": "San Francisco 49ers",
+    "note": "Played all 19 games including playoffs, 413 touches (league high)."
+  },
+  "coach_of_the_year": { "winner": "Mike Vrabel", "team": "New England Patriots" },
+  "assistant_coach_of_the_year": { "winner": "Josh McDaniels", "team": "New England Patriots", "role": "Offensive Coordinator" },
+  "protector_of_the_year": { "winner": "Joe Thuney", "team": "Chicago Bears", "position": "G", "note": "Inaugural award for the league's top offensive lineman." },
+  "super_bowl_lx": { "champion": "Seattle Seahawks", "runner_up": "New England Patriots" },
+  "source_note": "Compiled from NFL.com, ESPN, CBS Sports, and Yahoo Sports NFL Honors 2026 coverage."
+}

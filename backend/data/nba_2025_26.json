@@ -1,0 +1,82 @@
+{
+  "league": "NBA",
+  "season": "2025-26",
+  "mvp": {
+    "award_name": "Michael Jordan Trophy",
+    "winner": "Shai Gilgeous-Alexander",
+    "vote_summary": "83/100 first-place votes",
+    "finalists": [
+      {
+        "name": "Shai Gilgeous-Alexander",
+        "team": "Oklahoma City Thunder",
+        "position": "G",
+        "stats": { "ppg": 31.1, "apg": 6.6, "rpg": 4.3, "games_played": 68 },
+        "note": "Back-to-back MVP. Thunder finished 64-18, best record in the NBA.",
+        "result": "1st (Winner)"
+      },
+      {
+        "name": "Nikola Jokić",
+        "team": "Denver Nuggets",
+        "position": "C",
+        "stats": { "ppg": 27.7, "apg": 10.7, "rpg": 12.9 },
+        "note": "Runner-up.",
+        "result": "2nd"
+      },
+      {
+        "name": "Victor Wembanyama",
+        "team": "San Antonio Spurs",
+        "position": "C",
+        "stats": { "ppg": 25.0, "rpg": 11.5, "bpg": 3.1, "games_played": 64 },
+        "note": "Also won Defensive Player of the Year this season.",
+        "result": "3rd"
+      }
+    ]
+  },
+  "defensive_player_of_the_year": {
+    "award_name": "Hakeem Olajuwon Trophy",
+    "winner": "Victor Wembanyama",
+    "vote_summary": "100/100 first-place votes (first unanimous winner in award history)",
+    "finalists": [
+      {
+        "name": "Victor Wembanyama",
+        "team": "San Antonio Spurs",
+        "stats": { "bpg": 3.1, "total_blocks": 197, "spg": 1.0 },
+        "note": "Youngest DPOY in NBA history at 22.",
+        "result": "1st (Winner)"
+      },
+      { "name": "Chet Holmgren", "team": "Oklahoma City Thunder", "result": "2nd" },
+      { "name": "Ausar Thompson", "team": "Detroit Pistons", "result": "3rd" }
+    ]
+  },
+  "sixth_man_of_the_year": {
+    "award_name": "John Havlicek Trophy",
+    "winner": "Keldon Johnson",
+    "finalists": [
+      {
+        "name": "Keldon Johnson",
+        "team": "San Antonio Spurs",
+        "stats": { "ppg": 13.2, "rpg": 5.4, "fg_pct": 51.9, "three_pt_pct": 36.3 },
+        "note": "Franchise-record 1,081 bench points. First Spur to win since Manu Ginóbili (2007-08).",
+        "result": "1st (Winner)"
+      },
+      { "name": "Jaime Jaquez Jr.", "team": "Miami Heat", "note": "Led all reserves in scoring for the Heat.", "result": "2nd" },
+      { "name": "Tim Hardaway Jr.", "team": "Denver Nuggets", "note": "205 threes as a reserve, most in the NBA.", "result": "3rd" }
+    ]
+  },
+  "most_improved_player": { "winner": "Nickeil Alexander-Walker", "team": "Atlanta Hawks" },
+  "rookie_of_the_year": {
+    "award_name": "Wilt Chamberlain Trophy",
+    "winner": "Cooper Flagg",
+    "team": "Dallas Mavericks",
+    "finalists": ["Cooper Flagg", "VJ Edgecombe", "Kon Knueppel"]
+  },
+  "coach_of_the_year": { "winner": "Joe Mazzulla", "team": "Boston Celtics", "note": "56 wins." },
+  "all_nba_first_team": [
+    "Shai Gilgeous-Alexander",
+    "Nikola Jokić",
+    "Victor Wembanyama",
+    "Luka Dončić",
+    "Cade Cunningham"
+  ],
+  "source_note": "Compiled from NBA.com, CBS Sports, and Yahoo Sports award coverage, May 2026."
+}
