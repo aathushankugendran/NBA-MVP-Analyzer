@@ -1,0 +1,1056 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MVP Analyzer — NBA / NFL Awards</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Space+Mono:wght@400;700&family=VT323&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --court-navy: #0a0f24;
+    --panel-navy: #131a3a;
+    --hardwood: #c47a3d;
+    --hardwood-dark: #9c5f2c;
+    --gold: #e8b84b;
+    --gold-dim: #8a6a2e;
+    --led-amber: #ffb100;
+    --cream: #f3ecd9;
+    --red: #d6402c;
+    --green: #35d46a;
+    --green-dim: #1c6b39;
+    --line: rgba(243,236,217,0.12);
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: var(--court-navy); color: var(--cream); font-family: 'Inter', sans-serif; overflow-x: hidden; }
+  body::before {
+    content: ""; position: fixed; inset: 0;
+    background-image: repeating-linear-gradient(90deg, rgba(255,255,255,0.015) 0px, rgba(255,255,255,0.015) 1px, transparent 1px, transparent 40px);
+    pointer-events: none; z-index: 0;
+  }
+
+  /* ===== LEAGUE SWITCH BAR ===== */
+  :root { --mlb-blue: #4fa8e8; --mlb-blue-dim: #285d82; }
+
+  .league-switch-bar {
+    position: sticky; top: 0; z-index: 50;
+    background: #05070f; border-bottom: 2px solid var(--gold-dim);
+    display: flex; align-items: center; justify-content: center;
+    padding: 10px 16px;
+  }
+  .league-seg-group {
+    display: flex; align-items: stretch; border-radius: 22px; overflow: hidden;
+    background: linear-gradient(180deg, #1a2144 0%, #0d1226 100%);
+    border: 2px solid var(--gold-dim);
+    box-shadow: inset 0 2px 5px rgba(0,0,0,0.6), 0 0 0 3px rgba(232,184,75,0.08);
+  }
+  .league-seg {
+    appearance: none; border: none; background: transparent; cursor: pointer;
+    padding: 8px 18px; font-family: 'Anton', sans-serif; font-size: 13px; letter-spacing: 2px;
+    color: rgba(243,236,217,0.4); display: flex; align-items: center; gap: 7px;
+    border-right: 1px solid rgba(243,236,217,0.08); transition: color 0.25s ease, background 0.25s ease;
+  }
+  .league-seg:last-child { border-right: none; }
+  .seg-led { width: 8px; height: 8px; border-radius: 50%; background: #2a2a2a; box-shadow: inset 0 1px 2px rgba(0,0,0,0.6); transition: all 0.25s ease; }
+
+  .league-seg.active[data-league="nba"] { color: var(--led-amber); background: rgba(255,177,0,0.12); }
+  .league-seg.active[data-league="nba"] .seg-led { background: var(--led-amber); box-shadow: 0 0 8px rgba(255,177,0,0.9); }
+
+  .league-seg.active[data-league="nfl"] { color: var(--green); background: rgba(53,212,106,0.12); }
+  .league-seg.active[data-league="nfl"] .seg-led { background: var(--green); box-shadow: 0 0 8px rgba(53,212,106,0.9); }
+
+  .league-seg.active[data-league="mlb"] { color: var(--mlb-blue); background: rgba(79,168,232,0.12); }
+  .league-seg.active[data-league="mlb"] .seg-led { background: var(--mlb-blue); box-shadow: 0 0 8px rgba(79,168,232,0.9); }
+
+  .league-page { position: relative; z-index: 1; }
+
+  .marquee-wrap { background: var(--red); color: var(--cream); overflow: hidden; white-space: nowrap; border-bottom: 3px solid var(--gold); position: relative; z-index: 2; }
+  .marquee-wrap.nfl-theme { background: #1b3d2f; border-bottom-color: var(--green); }
+  .marquee-wrap.mlb-theme { background: #14304a; border-bottom-color: var(--mlb-blue); }
+  .marquee { display: inline-block; padding: 6px 0; font-family: 'Space Mono', monospace; font-weight: 700; font-size: 13px; letter-spacing: 2px; animation: scroll 26s linear infinite; }
+  @keyframes scroll { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
+
+  header { text-align: center; padding: 56px 20px 30px; position: relative; z-index: 1; }
+  .eyebrow { font-family: 'VT323', monospace; font-size: 20px; color: var(--led-amber); letter-spacing: 5px; text-shadow: 0 0 8px rgba(255,177,0,0.6); margin-bottom: 10px; }
+  .eyebrow.nfl-c { color: var(--green); text-shadow: 0 0 8px rgba(53,212,106,0.6); }
+  .eyebrow.mlb-c { color: var(--mlb-blue); text-shadow: 0 0 8px rgba(79,168,232,0.6); }
+  h1 { font-family: 'Anton', sans-serif; font-size: clamp(38px, 7.5vw, 88px); line-height: 0.95; letter-spacing: 1px; color: var(--cream); text-shadow: 3px 3px 0 var(--gold-dim), 6px 6px 0 rgba(0,0,0,0.4); text-transform: uppercase; }
+  h1 span { color: var(--gold); text-shadow: 3px 3px 0 var(--red), 6px 6px 0 rgba(0,0,0,0.4); }
+  h1.nfl-h1 span { color: var(--green); text-shadow: 3px 3px 0 var(--green-dim), 6px 6px 0 rgba(0,0,0,0.4); }
+  h1.mlb-h1 span { color: var(--mlb-blue); text-shadow: 3px 3px 0 var(--mlb-blue-dim), 6px 6px 0 rgba(0,0,0,0.4); }
+
+  .summary-box {
+    max-width: 680px; margin: 28px auto 0; background: var(--panel-navy);
+    border: 2px solid var(--gold-dim); border-radius: 8px; padding: 22px 26px;
+    font-family: 'Space Mono', monospace; font-size: 13.5px; line-height: 1.8; color: rgba(243,236,217,0.85); text-align: left;
+  }
+  .summary-box.nfl-box { border-color: var(--green-dim); }
+  .summary-box.mlb-box { border-color: var(--mlb-blue-dim); }
+  .summary-box b { color: var(--green); }
+  .summary-box .hl2 { color: var(--gold); }
+
+  .scroll-cue { margin-top: 30px; font-family: 'VT323', monospace; font-size: 15px; color: rgba(243,236,217,0.4); letter-spacing: 3px; animation: bob 1.6s ease-in-out infinite; }
+  @keyframes bob { 0%,100% { transform: translateY(0); } 50% { transform: translateY(6px); } }
+
+  section { position: relative; z-index: 1; max-width: 1080px; margin: 0 auto; padding: 0 20px; }
+  .section-title { font-family: 'Anton', sans-serif; font-size: clamp(26px, 4vw, 38px); text-transform: uppercase; color: var(--gold); text-align: center; margin: 80px 0 6px; letter-spacing: 1px; }
+  .section-title.nfl-t { color: var(--green); }
+  .section-title.mlb-t { color: var(--mlb-blue); }
+  .section-sub { text-align: center; font-family: 'Space Mono', monospace; font-size: 12.5px; color: rgba(243,236,217,0.5); margin-bottom: 36px; }
+
+  .race-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 20px; }
+  .race-cards.single { grid-template-columns: minmax(260px, 380px); justify-content: center; }
+
+  .card { background: linear-gradient(160deg, var(--hardwood) 0%, var(--hardwood-dark) 100%); border-radius: 6px; padding: 3px; transition: transform 0.25s ease; }
+  .card:hover { transform: translateY(-6px) rotate(-0.4deg); }
+  .card-inner { background: var(--panel-navy); border-radius: 4px; padding: 20px 18px 16px; height: 100%; border: 1px solid rgba(232,184,75,0.2); position: relative; }
+  .card.winner .card-inner { border: 2px solid var(--green); box-shadow: 0 0 26px rgba(53,212,106,0.3); }
+  .card-num { font-family: 'VT323', monospace; font-size: 14px; color: var(--gold-dim); letter-spacing: 2px; }
+  .card-name { font-family: 'Anton', sans-serif; font-size: 21px; text-transform: uppercase; line-height: 1.05; margin: 6px 0 14px; color: var(--cream); }
+  .card.winner .card-name { color: var(--green); }
+
+  .stat-row { display: flex; justify-content: space-between; align-items: baseline; padding: 6px 0; border-top: 1px solid var(--line); }
+  .stat-row:first-of-type { border-top: none; }
+  .stat-label { font-family: 'Space Mono', monospace; font-size: 10.5px; letter-spacing: 1px; color: rgba(243,236,217,0.55); }
+  .stat-val { font-family: 'VT323', monospace; font-size: 22px; color: var(--led-amber); text-shadow: 0 0 6px rgba(255,177,0,0.5); }
+  .card.winner .stat-val { color: var(--green); text-shadow: 0 0 6px rgba(53,212,106,0.5); }
+
+  .winner-badge { display: none; margin-top: 14px; background: var(--green); color: var(--court-navy); font-family: 'Anton', sans-serif; font-size: 12px; letter-spacing: 2px; text-align: center; padding: 6px 0; border-radius: 3px; }
+  .card.winner .winner-badge { display: block; }
+
+  .vote-note { text-align: center; font-family: 'Space Mono', monospace; font-size: 11.5px; color: rgba(243,236,217,0.45); margin-top: 22px; }
+
+  .mini-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 14px; }
+  .mini-card { background: var(--panel-navy); border: 1px solid var(--line); border-radius: 6px; padding: 16px; }
+  .mini-card.winner-mini { border-color: var(--green); box-shadow: 0 0 16px rgba(53,212,106,0.2); }
+  .mini-label { font-family: 'Space Mono', monospace; font-size: 10.5px; letter-spacing: 1.5px; color: rgba(243,236,217,0.45); }
+  .mini-name { font-family: 'Anton', sans-serif; font-size: 18px; margin-top: 6px; color: var(--cream); text-transform: uppercase; }
+  .mini-card.winner-mini .mini-name { color: var(--green); }
+  .mini-sub { font-family: 'Space Mono', monospace; font-size: 11px; color: rgba(243,236,217,0.5); margin-top: 4px; }
+
+  .terminal-wrap {
+    background: #06090f; border: 2px solid var(--green-dim); border-radius: 8px;
+    margin-top: 20px; overflow: hidden; box-shadow: 0 0 40px rgba(53,212,106,0.08);
+  }
+  .terminal-bar { background: #0d1b12; padding: 8px 14px; display: flex; align-items: center; gap: 8px; border-bottom: 1px solid var(--green-dim); }
+  .dot { width: 10px; height: 10px; border-radius: 50%; }
+  .dot.r { background: #d6402c; } .dot.y { background: #e8b84b; } .dot.g { background: #35d46a; }
+  .terminal-title { font-family: 'Space Mono', monospace; font-size: 11px; color: rgba(53,212,106,0.6); letter-spacing: 1.5px; margin-left: 8px; }
+
+  .terminal-body {
+    position: relative; padding: 18px 20px; font-family: 'VT323', monospace; font-size: 17px;
+    color: var(--green); height: 380px; overflow-y: auto; line-height: 1.5;
+  }
+  .terminal-body::after {
+    content: ""; position: absolute; inset: 0; pointer-events: none;
+    background: repeating-linear-gradient(0deg, rgba(0,0,0,0.15) 0px, rgba(0,0,0,0.15) 1px, transparent 1px, transparent 3px);
+  }
+  .term-line { white-space: pre-wrap; word-break: break-word; }
+  .term-line.cmd { color: var(--cream); }
+  .term-line.cmd::before { content: "$ "; color: var(--green); }
+  .term-line.err { color: var(--red); }
+  .term-line.hl { color: var(--gold); }
+
+  .terminal-input-row { display: flex; align-items: center; gap: 6px; }
+  .terminal-input-row span { color: var(--green); }
+  .term-input {
+    background: transparent; border: none; outline: none; color: var(--cream);
+    font-family: 'VT323', monospace; font-size: 17px; flex: 1; caret-color: var(--green); width: 100%;
+  }
+
+  .term-hint { text-align: center; font-family: 'Space Mono', monospace; font-size: 11px; color: rgba(243,236,217,0.4); margin-top: 14px; }
+  .term-hint code { color: var(--gold); }
+
+  footer { margin-top: 90px; border-top: 3px solid var(--gold-dim); background: var(--panel-navy); padding: 40px 20px 32px; text-align: center; position: relative; z-index: 1; }
+  .footer-title { font-family: 'VT323', monospace; font-size: 18px; color: var(--led-amber); letter-spacing: 3px; animation: flicker 3s infinite; }
+  @keyframes flicker { 0%, 92%, 100% { opacity: 1; } 93%, 95% { opacity: 0.4; } }
+  footer p { font-family: 'Space Mono', monospace; font-size: 12px; color: rgba(243,236,217,0.5); margin-top: 12px; }
+  footer a { color: var(--gold); text-decoration: none; }
+  footer a:hover { text-decoration: underline; }
+
+  @media (max-width: 640px) { .terminal-body { height: 320px; font-size: 15px; } }
+</style>
+</head>
+<body>
+
+  <div class="league-switch-bar">
+    <div class="league-seg-group" role="tablist" aria-label="Switch league">
+      <button class="league-seg active" data-league="nba" role="tab" aria-selected="true"><span class="seg-led"></span>NBA</button>
+      <button class="league-seg" data-league="nfl" role="tab" aria-selected="false"><span class="seg-led"></span>NFL</button>
+      <button class="league-seg" data-league="mlb" role="tab" aria-selected="false"><span class="seg-led"></span>MLB</button>
+    </div>
+  </div>
+
+  <!-- ============ NBA PAGE ============ -->
+  <div class="league-page" id="nbaPage">
+
+    <div class="marquee-wrap">
+      <div class="marquee">
+        🏀 2025–26 NBA REGULAR SEASON AWARDS &nbsp;•&nbsp; MVP &nbsp;•&nbsp; DPOY &nbsp;•&nbsp; 6TH MAN &nbsp;•&nbsp; ROOKIE OF THE YEAR &nbsp;•&nbsp; ALL-NBA &nbsp;•&nbsp; 2025–26 NBA REGULAR SEASON AWARDS &nbsp;•&nbsp; MVP &nbsp;•&nbsp; DPOY &nbsp;•&nbsp; 6TH MAN &nbsp;•&nbsp; ROOKIE OF THE YEAR &nbsp;•&nbsp; ALL-NBA &nbsp;•&nbsp;
+      </div>
+    </div>
+
+    <header>
+      <div class="eyebrow">FINAL BUZZER</div>
+      <h1>MVP<br><span>RACE</span> '26</h1>
+      <div class="summary-box">
+        <b>Shai Gilgeous-Alexander</b> repeats as NBA MVP, taking 83 of 100 first-place votes and going back-to-back for the Thunder (64-18, best record in the league). <span class="hl2">Victor Wembanyama</span> swept the field for Defensive Player of the Year — the first-ever <b>unanimous</b> winner, at 22 the youngest DPOY in NBA history. Scroll down for the full race, real 2025-26 stats, and every finalist — or drop into the terminal and ask it yourself.
+      </div>
+      <div class="scroll-cue">▼ SCROLL FOR THE FULL BREAKDOWN ▼</div>
+    </header>
+
+    <section>
+      <div class="section-title">MVP Race</div>
+      <div class="section-sub">Three finalists. One Michael Jordan Trophy. Real 2025-26 regular-season averages.</div>
+      <div class="race-cards">
+        <div class="card winner">
+          <div class="card-inner">
+            <div class="card-num">NO. 2 · G · OKC</div>
+            <div class="card-name">Shai Gilgeous-Alexander</div>
+            <div class="stat-row"><span class="stat-label">PPG</span><span class="stat-val">31.1</span></div>
+            <div class="stat-row"><span class="stat-label">APG</span><span class="stat-val">6.6</span></div>
+            <div class="stat-row"><span class="stat-label">RPG</span><span class="stat-val">4.3</span></div>
+            <div class="stat-row"><span class="stat-label">TEAM RECORD</span><span class="stat-val">64-18</span></div>
+            <div class="winner-badge">★ MVP — BACK TO BACK ★</div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-inner">
+            <div class="card-num">NO. 15 · C · DEN</div>
+            <div class="card-name">Nikola Jokić</div>
+            <div class="stat-row"><span class="stat-label">PPG</span><span class="stat-val">27.7</span></div>
+            <div class="stat-row"><span class="stat-label">APG</span><span class="stat-val">10.7</span></div>
+            <div class="stat-row"><span class="stat-label">RPG</span><span class="stat-val">12.9</span></div>
+            <div class="stat-row"><span class="stat-label">RESULT</span><span class="stat-val">2ND</span></div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-inner">
+            <div class="card-num">NO. 1 · C · SAS</div>
+            <div class="card-name">Victor Wembanyama</div>
+            <div class="stat-row"><span class="stat-label">PPG</span><span class="stat-val">25.0</span></div>
+            <div class="stat-row"><span class="stat-label">RPG</span><span class="stat-val">11.5</span></div>
+            <div class="stat-row"><span class="stat-label">BPG</span><span class="stat-val">3.1</span></div>
+            <div class="stat-row"><span class="stat-label">RESULT</span><span class="stat-val">3RD</span></div>
+          </div>
+        </div>
+      </div>
+      <div class="vote-note">Decided by a 100-person global media panel — SGA received 83 first-place votes.</div>
+    </section>
+
+    <section>
+      <div class="section-title">Defensive Player of the Year</div>
+      <div class="section-sub">Wembanyama led the league with 3.1 blocks per game — a 1.2 block margin over anyone else.</div>
+      <div class="race-cards">
+        <div class="card winner">
+          <div class="card-inner">
+            <div class="card-num">NO. 1 · C · SAS</div>
+            <div class="card-name">Victor Wembanyama</div>
+            <div class="stat-row"><span class="stat-label">BPG</span><span class="stat-val">3.1</span></div>
+            <div class="stat-row"><span class="stat-label">TOTAL BLOCKS</span><span class="stat-val">197</span></div>
+            <div class="stat-row"><span class="stat-label">1ST-PLACE VOTES</span><span class="stat-val">100/100</span></div>
+            <div class="winner-badge">★ DPOY — UNANIMOUS ★</div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-inner">
+            <div class="card-num">C · OKC</div>
+            <div class="card-name">Chet Holmgren</div>
+            <div class="stat-row"><span class="stat-label">RESULT</span><span class="stat-val">2ND</span></div>
+            <div class="stat-row"><span class="stat-label">TEAM SEED</span><span class="stat-val">NO. 1</span></div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-inner">
+            <div class="card-num">F · DET</div>
+            <div class="card-name">Ausar Thompson</div>
+            <div class="stat-row"><span class="stat-label">RESULT</span><span class="stat-val">3RD</span></div>
+            <div class="stat-row"><span class="stat-label">TEAM SEED</span><span class="stat-val">NO. 1</span></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <div class="section-title">Sixth Man of the Year</div>
+      <div class="section-sub">First Spur to win it since Manu Ginóbili in 2007-08.</div>
+      <div class="race-cards">
+        <div class="card winner">
+          <div class="card-inner">
+            <div class="card-num">G/F · SAS</div>
+            <div class="card-name">Keldon Johnson</div>
+            <div class="stat-row"><span class="stat-label">PPG</span><span class="stat-val">13.2</span></div>
+            <div class="stat-row"><span class="stat-label">RPG</span><span class="stat-val">5.4</span></div>
+            <div class="stat-row"><span class="stat-label">BENCH PTS</span><span class="stat-val">1,081</span></div>
+            <div class="winner-badge">★ SIXTH MAN OF THE YEAR ★</div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-inner">
+            <div class="card-num">F · MIA</div>
+            <div class="card-name">Jaime Jaquez Jr.</div>
+            <div class="stat-row"><span class="stat-label">RESULT</span><span class="stat-val">2ND</span></div>
+            <div class="stat-row"><span class="stat-label">NOTE</span><span class="stat-val">TOP RESERVE SCORER</span></div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-inner">
+            <div class="card-num">G · DEN</div>
+            <div class="card-name">Tim Hardaway Jr.</div>
+            <div class="stat-row"><span class="stat-label">RESULT</span><span class="stat-val">3RD</span></div>
+            <div class="stat-row"><span class="stat-label">3PM AS RESERVE</span><span class="stat-val">205</span></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <div class="section-title">Also In The Race</div>
+      <div class="section-sub">The rest of the 2025-26 trophy case.</div>
+      <div class="mini-grid">
+        <div class="mini-card winner-mini">
+          <div class="mini-label">MOST IMPROVED PLAYER</div>
+          <div class="mini-name">Nickeil Alexander-Walker</div>
+          <div class="mini-sub">Atlanta Hawks</div>
+        </div>
+        <div class="mini-card winner-mini">
+          <div class="mini-label">ROOKIE OF THE YEAR</div>
+          <div class="mini-name">Cooper Flagg</div>
+          <div class="mini-sub">Dallas Mavericks · over VJ Edgecombe, Kon Knueppel</div>
+        </div>
+        <div class="mini-card winner-mini">
+          <div class="mini-label">COACH OF THE YEAR</div>
+          <div class="mini-name">Joe Mazzulla</div>
+          <div class="mini-sub">Boston Celtics · 56 wins</div>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <div class="section-title">Query The Data</div>
+      <div class="section-sub">A tiny terminal that answers questions against the real 2025-26 NBA dataset above.</div>
+      <div class="terminal-wrap">
+        <div class="terminal-bar">
+          <span class="dot r"></span><span class="dot y"></span><span class="dot g"></span>
+          <span class="terminal-title">mvp_analyzer — nba — bash</span>
+        </div>
+        <div class="terminal-body" id="termBodyNba">
+          <div class="term-line">MVP Analyzer v2.0 — 2025-26 NBA Awards Dataset loaded.</div>
+          <div class="term-line">Type <span class="hl">help</span> to see available commands.</div>
+          <div class="term-line">&nbsp;</div>
+          <div class="terminal-input-row">
+            <span>$</span><input type="text" class="term-input" id="termInputNba" autocomplete="off" spellcheck="false" placeholder="try: python mvp_analyzer.py">
+          </div>
+        </div>
+      </div>
+      <div class="term-hint">Try <code>help</code> · <code>python mvp_analyzer.py</code> · <code>who won dpoy</code> · <code>stats jokic</code> · <code>awards</code></div>
+    </section>
+
+    <footer>
+      <div class="footer-title">◆ NEXT SEASON'S PATCH NOTES ◆</div>
+      <p>Live API integration &nbsp;·&nbsp; historical MVP race tracking &nbsp;·&nbsp; weighted ranking algorithms</p>
+      <p style="margin-top:20px;">Built by <a href="https://github.com/aathushankugendran" target="_blank">Aathushan Kugendran</a> &nbsp;·&nbsp; <a href="https://github.com/aathushankugendran/NBA-MVP-Analyzer" target="_blank">View source on GitHub</a></p>
+    </footer>
+  </div>
+
+  <!-- ============ NFL PAGE ============ -->
+  <div class="league-page" id="nflPage" style="display:none;">
+
+    <div class="marquee-wrap nfl-theme">
+      <div class="marquee">
+        🏈 2025 NFL SEASON AWARDS &nbsp;•&nbsp; MVP &nbsp;•&nbsp; OFFENSIVE POY &nbsp;•&nbsp; DEFENSIVE POY &nbsp;•&nbsp; ROOKIES OF THE YEAR &nbsp;•&nbsp; COMEBACK PLAYER &nbsp;•&nbsp; 2025 NFL SEASON AWARDS &nbsp;•&nbsp; MVP &nbsp;•&nbsp; OFFENSIVE POY &nbsp;•&nbsp; DEFENSIVE POY &nbsp;•&nbsp; ROOKIES OF THE YEAR &nbsp;•&nbsp; COMEBACK PLAYER &nbsp;•&nbsp;
+      </div>
+    </div>
+
+    <header>
+      <div class="eyebrow nfl-c">FINAL WHISTLE</div>
+      <h1 class="nfl-h1">MVP<br><span>RACE</span> '25</h1>
+      <div class="summary-box nfl-box">
+        <b>Matthew Stafford</b> wins his first MVP at 37 — the oldest first-time winner in NFL history — edging Drake Maye in the closest MVP vote since 2003 (366 points to 361). <span class="hl2">Myles Garrett</span> becomes a two-time DPOY, unanimously, after setting the single-season NFL sack record with 23. Announced at NFL Honors, Feb. 5, 2026. Scroll down for the full race — or drop into the terminal and ask it yourself.
+      </div>
+      <div class="scroll-cue">▼ SCROLL FOR THE FULL BREAKDOWN ▼</div>
+    </header>
+
+    <section>
+      <div class="section-title nfl-t">MVP Race</div>
+      <div class="section-sub">Closest MVP vote since 2003. Real final 2025 season stats.</div>
+      <div class="race-cards">
+        <div class="card winner">
+          <div class="card-inner">
+            <div class="card-num">NO. 9 · QB · LAR</div>
+            <div class="card-name">Matthew Stafford</div>
+            <div class="stat-row"><span class="stat-label">PASS YDS</span><span class="stat-val">4,707</span></div>
+            <div class="stat-row"><span class="stat-label">TD / INT</span><span class="stat-val">46 / 8</span></div>
+            <div class="stat-row"><span class="stat-label">RATING</span><span class="stat-val">109.2</span></div>
+            <div class="stat-row"><span class="stat-label">VOTE PTS</span><span class="stat-val">366 (24)</span></div>
+            <div class="winner-badge">★ MVP — FIRST OF CAREER ★</div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-inner">
+            <div class="card-num">NO. 10 · QB · NE</div>
+            <div class="card-name">Drake Maye</div>
+            <div class="stat-row"><span class="stat-label">RESULT</span><span class="stat-val">2ND</span></div>
+            <div class="stat-row"><span class="stat-label">VOTE PTS</span><span class="stat-val">361 (23)</span></div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-inner">
+            <div class="card-num">NO. 17 · QB · BUF</div>
+            <div class="card-name">Josh Allen</div>
+            <div class="stat-row"><span class="stat-label">PASS YDS</span><span class="stat-val">3,668</span></div>
+            <div class="stat-row"><span class="stat-label">TOTAL TD</span><span class="stat-val">39</span></div>
+            <div class="stat-row"><span class="stat-label">RUSH YDS</span><span class="stat-val">579</span></div>
+          </div>
+        </div>
+      </div>
+      <div class="vote-note">AP MVP voting — Stafford 366 pts (24 first-place votes) vs. Maye 361 pts (23 first-place votes).</div>
+    </section>
+
+    <section>
+      <div class="section-title nfl-t">Offensive Player of the Year</div>
+      <div class="section-sub">Smith-Njigba led the entire NFL in receiving yards.</div>
+      <div class="race-cards">
+        <div class="card winner">
+          <div class="card-inner">
+            <div class="card-num">NO. 11 · WR · SEA</div>
+            <div class="card-name">Jaxon Smith-Njigba</div>
+            <div class="stat-row"><span class="stat-label">REC YDS</span><span class="stat-val">1,793</span></div>
+            <div class="stat-row"><span class="stat-label">VOTE PTS</span><span class="stat-val">272 (14)</span></div>
+            <div class="winner-badge">★ OFFENSIVE PLAYER OF THE YEAR ★</div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-inner">
+            <div class="card-num">NO. 23 · RB · SF</div>
+            <div class="card-name">Christian McCaffrey</div>
+            <div class="stat-row"><span class="stat-label">SCRIMMAGE YDS</span><span class="stat-val">2,126</span></div>
+            <div class="stat-row"><span class="stat-label">VOTE PTS</span><span class="stat-val">223 (12)</span></div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-inner">
+            <div class="card-num">WR · LAR</div>
+            <div class="card-name">Puka Nacua</div>
+            <div class="stat-row"><span class="stat-label">RESULT</span><span class="stat-val">3RD</span></div>
+            <div class="stat-row"><span class="stat-label">VOTE PTS</span><span class="stat-val">170 (8)</span></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <div class="section-title nfl-t">Defensive Player of the Year</div>
+      <div class="section-sub">A new NFL single-season sack record — and a unanimous vote.</div>
+      <div class="race-cards single">
+        <div class="card winner">
+          <div class="card-inner">
+            <div class="card-num">NO. 95 · DE · CLE</div>
+            <div class="card-name">Myles Garrett</div>
+            <div class="stat-row"><span class="stat-label">SACKS</span><span class="stat-val">23</span></div>
+            <div class="stat-row"><span class="stat-label">NOTE</span><span class="stat-val">NFL RECORD</span></div>
+            <div class="stat-row"><span class="stat-label">VOTE</span><span class="stat-val">UNANIMOUS</span></div>
+            <div class="winner-badge">★ DPOY — 2X WINNER ★</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <div class="section-title nfl-t">Also In The Race</div>
+      <div class="section-sub">The rest of the 2025 NFL Honors trophy case.</div>
+      <div class="mini-grid">
+        <div class="mini-card winner-mini">
+          <div class="mini-label">OFFENSIVE ROOKIE OF THE YEAR</div>
+          <div class="mini-name">Tetairoa McMillan</div>
+          <div class="mini-sub">Carolina Panthers · WR</div>
+        </div>
+        <div class="mini-card winner-mini">
+          <div class="mini-label">DEFENSIVE ROOKIE OF THE YEAR</div>
+          <div class="mini-name">Carson Schwesinger</div>
+          <div class="mini-sub">Cleveland Browns · LB</div>
+        </div>
+        <div class="mini-card winner-mini">
+          <div class="mini-label">COMEBACK PLAYER OF THE YEAR</div>
+          <div class="mini-name">Christian McCaffrey</div>
+          <div class="mini-sub">San Francisco 49ers · all 19 games, 413 touches</div>
+        </div>
+        <div class="mini-card winner-mini">
+          <div class="mini-label">COACH OF THE YEAR</div>
+          <div class="mini-name">Mike Vrabel</div>
+          <div class="mini-sub">New England Patriots</div>
+        </div>
+        <div class="mini-card winner-mini">
+          <div class="mini-label">ASSISTANT COACH OF THE YEAR</div>
+          <div class="mini-name">Josh McDaniels</div>
+          <div class="mini-sub">New England Patriots · OC</div>
+        </div>
+        <div class="mini-card winner-mini">
+          <div class="mini-label">PROTECTOR OF THE YEAR</div>
+          <div class="mini-name">Joe Thuney</div>
+          <div class="mini-sub">Chicago Bears · G (inaugural award)</div>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <div class="section-title nfl-t">Query The Data</div>
+      <div class="section-sub">A tiny terminal that answers questions against the real 2025 NFL dataset above.</div>
+      <div class="terminal-wrap">
+        <div class="terminal-bar">
+          <span class="dot r"></span><span class="dot y"></span><span class="dot g"></span>
+          <span class="terminal-title">mvp_analyzer — nfl — bash</span>
+        </div>
+        <div class="terminal-body" id="termBodyNfl">
+          <div class="term-line">MVP Analyzer v2.0 — 2025 NFL Awards Dataset loaded.</div>
+          <div class="term-line">Type <span class="hl">help</span> to see available commands.</div>
+          <div class="term-line">&nbsp;</div>
+          <div class="terminal-input-row">
+            <span>$</span><input type="text" class="term-input" id="termInputNfl" autocomplete="off" spellcheck="false" placeholder="try: python mvp_analyzer.py">
+          </div>
+        </div>
+      </div>
+      <div class="term-hint">Try <code>help</code> · <code>python mvp_analyzer.py</code> · <code>who won dpoy</code> · <code>stats stafford</code> · <code>awards</code></div>
+    </section>
+
+    <footer>
+      <div class="footer-title">◆ NEXT SEASON'S PATCH NOTES ◆</div>
+      <p>Live API integration &nbsp;·&nbsp; historical MVP race tracking &nbsp;·&nbsp; weighted ranking algorithms</p>
+      <p style="margin-top:20px;">Built by <a href="https://github.com/aathushankugendran" target="_blank">Aathushan Kugendran</a> &nbsp;·&nbsp; <a href="https://github.com/aathushankugendran/NBA-MVP-Analyzer" target="_blank">View source on GitHub</a></p>
+    </footer>
+  </div>
+
+  <!-- ============ MLB PAGE ============ -->
+  <div class="league-page" id="mlbPage" style="display:none;">
+
+    <div class="marquee-wrap mlb-theme">
+      <div class="marquee">
+        ⚾ 2025 MLB SEASON AWARDS &nbsp;•&nbsp; AL/NL MVP &nbsp;•&nbsp; CY YOUNG &nbsp;•&nbsp; ROOKIE OF THE YEAR &nbsp;•&nbsp; MANAGER OF THE YEAR &nbsp;•&nbsp; WORLD SERIES &nbsp;•&nbsp; 2025 MLB SEASON AWARDS &nbsp;•&nbsp; AL/NL MVP &nbsp;•&nbsp; CY YOUNG &nbsp;•&nbsp; ROOKIE OF THE YEAR &nbsp;•&nbsp; MANAGER OF THE YEAR &nbsp;•&nbsp; WORLD SERIES &nbsp;•&nbsp;
+      </div>
+    </div>
+
+    <header>
+      <div class="eyebrow mlb-c">FINAL OUT</div>
+      <h1 class="mlb-h1">MVP<br><span>RACE</span> '25</h1>
+      <div class="summary-box mlb-box">
+        <b>Aaron Judge</b> edges Cal Raleigh for his third AL MVP (355 pts to 335), while <span class="hl2">Shohei Ohtani</span> wins NL MVP unanimously for the third straight year — his fourth MVP in five seasons. The Dodgers beat the Blue Jays to repeat as World Series champions, with Yoshinobu Yamamoto named Series MVP. Scroll down for the full trophy case — or drop into the terminal and ask it yourself.
+      </div>
+      <div class="scroll-cue">▼ SCROLL FOR THE FULL BREAKDOWN ▼</div>
+    </header>
+
+    <section>
+      <div class="section-title mlb-t">MVP Race</div>
+      <div class="section-sub">One winner per league. Real final 2025 stats and vote totals.</div>
+      <div class="race-cards">
+        <div class="card winner">
+          <div class="card-inner">
+            <div class="card-num">AL · OF · NYY</div>
+            <div class="card-name">Aaron Judge</div>
+            <div class="stat-row"><span class="stat-label">AVG</span><span class="stat-val">.331</span></div>
+            <div class="stat-row"><span class="stat-label">HR</span><span class="stat-val">53</span></div>
+            <div class="stat-row"><span class="stat-label">OPS</span><span class="stat-val">1.144</span></div>
+            <div class="stat-row"><span class="stat-label">VOTE PTS</span><span class="stat-val">355 (17)</span></div>
+            <div class="winner-badge">★ AL MVP — 3RD CAREER ★</div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-inner">
+            <div class="card-num">AL · C · SEA</div>
+            <div class="card-name">Cal Raleigh</div>
+            <div class="stat-row"><span class="stat-label">RESULT</span><span class="stat-val">2ND</span></div>
+            <div class="stat-row"><span class="stat-label">VOTE PTS</span><span class="stat-val">335 (13)</span></div>
+          </div>
+        </div>
+        <div class="card winner">
+          <div class="card-inner">
+            <div class="card-num">NL · DH/SP · LAD</div>
+            <div class="card-name">Shohei Ohtani</div>
+            <div class="stat-row"><span class="stat-label">HR</span><span class="stat-val">55</span></div>
+            <div class="stat-row"><span class="stat-label">ERA (SP)</span><span class="stat-val">2.87</span></div>
+            <div class="stat-row"><span class="stat-label">VOTE</span><span class="stat-val">UNANIMOUS</span></div>
+            <div class="winner-badge">★ NL MVP — 4TH CAREER ★</div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-inner">
+            <div class="card-num">NL · DH · PHI</div>
+            <div class="card-name">Kyle Schwarber</div>
+            <div class="stat-row"><span class="stat-label">HR</span><span class="stat-val">56</span></div>
+            <div class="stat-row"><span class="stat-label">RESULT</span><span class="stat-val">2ND</span></div>
+          </div>
+        </div>
+      </div>
+      <div class="vote-note">Judge 355 pts (17 first-place votes) over Raleigh 335 (13) in the AL. Ohtani won the NL unanimously — his 3rd straight NL MVP.</div>
+    </section>
+
+    <section>
+      <div class="section-title mlb-t">Cy Young</div>
+      <div class="section-sub">Skubal repeats. Skenes wins his first — unanimously.</div>
+      <div class="race-cards">
+        <div class="card winner">
+          <div class="card-inner">
+            <div class="card-num">AL · RHP · DET</div>
+            <div class="card-name">Tarik Skubal</div>
+            <div class="stat-row"><span class="stat-label">RESULT</span><span class="stat-val">2ND STRAIGHT</span></div>
+            <div class="winner-badge">★ AL CY YOUNG ★</div>
+          </div>
+        </div>
+        <div class="card winner">
+          <div class="card-inner">
+            <div class="card-num">NL · RHP · PIT</div>
+            <div class="card-name">Paul Skenes</div>
+            <div class="stat-row"><span class="stat-label">ERA</span><span class="stat-val">1.97</span></div>
+            <div class="stat-row"><span class="stat-label">STRIKEOUTS</span><span class="stat-val">216</span></div>
+            <div class="stat-row"><span class="stat-label">VOTE</span><span class="stat-val">UNANIMOUS</span></div>
+            <div class="winner-badge">★ NL CY YOUNG ★</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <div class="section-title mlb-t">World Series</div>
+      <div class="section-sub">Back-to-back champions.</div>
+      <div class="race-cards single">
+        <div class="card winner">
+          <div class="card-inner">
+            <div class="card-num">NL CHAMPIONS</div>
+            <div class="card-name">Los Angeles Dodgers</div>
+            <div class="stat-row"><span class="stat-label">RESULT</span><span class="stat-val">DEF. BLUE JAYS</span></div>
+            <div class="stat-row"><span class="stat-label">SERIES MVP</span><span class="stat-val">Y. YAMAMOTO</span></div>
+            <div class="winner-badge">★ 2X DEFENDING CHAMPS ★</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <div class="section-title mlb-t">Also In The Race</div>
+      <div class="section-sub">The rest of the 2025 MLB trophy case.</div>
+      <div class="mini-grid">
+        <div class="mini-card winner-mini">
+          <div class="mini-label">AL ROOKIE OF THE YEAR</div>
+          <div class="mini-name">Nick Kurtz</div>
+          <div class="mini-sub">Athletics · unanimous · 36 HR</div>
+        </div>
+        <div class="mini-card winner-mini">
+          <div class="mini-label">NL ROOKIE OF THE YEAR</div>
+          <div class="mini-name">Drake Baldwin</div>
+          <div class="mini-sub">Atlanta Braves · C</div>
+        </div>
+        <div class="mini-card winner-mini">
+          <div class="mini-label">AL MANAGER OF THE YEAR</div>
+          <div class="mini-name">Stephen Vogt</div>
+          <div class="mini-sub">Cleveland Guardians · 2nd straight</div>
+        </div>
+        <div class="mini-card winner-mini">
+          <div class="mini-label">NL MANAGER OF THE YEAR</div>
+          <div class="mini-name">Pat Murphy</div>
+          <div class="mini-sub">Milwaukee Brewers · 2nd straight</div>
+        </div>
+        <div class="mini-card winner-mini">
+          <div class="mini-label">COMEBACK PLAYER (AL / NL)</div>
+          <div class="mini-name">deGrom · Acuña Jr.</div>
+          <div class="mini-sub">Rangers · Braves</div>
+        </div>
+        <div class="mini-card winner-mini">
+          <div class="mini-label">HANK AARON AWARD (AL / NL)</div>
+          <div class="mini-name">Judge · Ohtani</div>
+          <div class="mini-sub">Yankees · Dodgers</div>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <div class="section-title mlb-t">Query The Data</div>
+      <div class="section-sub">A tiny terminal that answers questions against the real 2025 MLB dataset above.</div>
+      <div class="terminal-wrap">
+        <div class="terminal-bar">
+          <span class="dot r"></span><span class="dot y"></span><span class="dot g"></span>
+          <span class="terminal-title">mvp_analyzer — mlb — bash</span>
+        </div>
+        <div class="terminal-body" id="termBodyMlb">
+          <div class="term-line">MVP Analyzer v2.0 — 2025 MLB Awards Dataset loaded.</div>
+          <div class="term-line">Type <span class="hl">help</span> to see available commands.</div>
+          <div class="term-line">&nbsp;</div>
+          <div class="terminal-input-row">
+            <span>$</span><input type="text" class="term-input" id="termInputMlb" autocomplete="off" spellcheck="false" placeholder="try: python mvp_analyzer.py">
+          </div>
+        </div>
+      </div>
+      <div class="term-hint">Try <code>help</code> · <code>python mvp_analyzer.py</code> · <code>who won cy young</code> · <code>stats ohtani</code> · <code>awards</code></div>
+    </section>
+
+    <footer>
+      <div class="footer-title">◆ NEXT SEASON'S PATCH NOTES ◆</div>
+      <p>Live API integration &nbsp;·&nbsp; historical MVP race tracking &nbsp;·&nbsp; weighted ranking algorithms</p>
+      <p style="margin-top:20px;">Built by <a href="https://github.com/aathushankugendran" target="_blank">Aathushan Kugendran</a> &nbsp;·&nbsp; <a href="https://github.com/aathushankugendran/NBA-MVP-Analyzer" target="_blank">View source on GitHub</a></p>
+    </footer>
+  </div>
+
+<script>
+  // ---------- LEAGUE SWITCHER ----------
+  const pages = {
+    nba: document.getElementById('nbaPage'),
+    nfl: document.getElementById('nflPage'),
+    mlb: document.getElementById('mlbPage')
+  };
+  const segs = document.querySelectorAll('.league-seg');
+
+  function setLeague(league) {
+    Object.entries(pages).forEach(([key, el]) => { el.style.display = key === league ? '' : 'none'; });
+    segs.forEach(seg => {
+      const isActive = seg.dataset.league === league;
+      seg.classList.toggle('active', isActive);
+      seg.setAttribute('aria-selected', String(isActive));
+    });
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  segs.forEach(seg => seg.addEventListener('click', () => setLeague(seg.dataset.league)));
+
+  // ---------- SHARED TERMINAL ENGINE ----------
+  function buildTerminal(bodyId, inputId, DATA, scriptLabel) {
+    const termBody = document.getElementById(bodyId);
+    const termInput = document.getElementById(inputId);
+
+    function printLine(text, cls) {
+      const inputRow = termBody.querySelector('.terminal-input-row');
+      const line = document.createElement('div');
+      line.className = 'term-line' + (cls ? ' ' + cls : '');
+      line.textContent = text;
+      termBody.insertBefore(line, inputRow);
+      termBody.scrollTop = termBody.scrollHeight;
+    }
+    function printBlank() { printLine('\u00A0'); }
+
+    function findPlayer(query) {
+      query = query.toLowerCase();
+      const all = [...DATA.mvp.finalists, ...DATA.secondary.finalists, ...(DATA.tertiary ? DATA.tertiary.finalists : [])];
+      return all.find(p => p.name.toLowerCase().includes(query));
+    }
+
+    function winnerText(group) {
+      return Array.isArray(group.winner) ? group.winner.join(' & ') : group.winner;
+    }
+
+    function runAnalyzer(group, label) {
+      printLine(`Loading ${scriptLabel} ${label} finalist dataset...`);
+      group.finalists.forEach(p => printLine(`  ${p.name} (${p.team}) — ${p.note}`));
+      printBlank();
+      printLine(`Official result: ${winnerText(group)} — ${label} winner.`, 'hl');
+    }
+
+    function handleCommand(raw) {
+      const cmd = raw.trim();
+      if (!cmd) return;
+      printLine(cmd, 'cmd');
+      const lower = cmd.toLowerCase();
+
+      if (lower === 'help') {
+        printLine('Available commands:');
+        printLine('  python mvp_analyzer.py         run the MVP race breakdown');
+        printLine('  python secondary_analyzer.py   run the second award breakdown');
+        printLine('  stats <player name>            print a finalist\'s stat line');
+        printLine('  awards                         list every award winner');
+        printLine('  who won <award>                 e.g. "who won mvp"');
+        printLine('  clear                           clear the terminal');
+      } else if (lower === 'python mvp_analyzer.py') {
+        runAnalyzer(DATA.mvp, DATA.mvp.label);
+      } else if (lower === 'python secondary_analyzer.py' || lower === 'python dpoy_analyzer.py' || lower === 'python opoy_analyzer.py') {
+        runAnalyzer(DATA.secondary, DATA.secondary.label);
+      } else if (lower === 'python sixthman_analyzer.py' && DATA.tertiary) {
+        runAnalyzer(DATA.tertiary, DATA.tertiary.label);
+      } else if (lower === 'clear') {
+        termBody.querySelectorAll('.term-line').forEach(l => l.remove());
+      } else if (lower === 'awards' || lower === 'ls awards') {
+        printLine(`${DATA.mvp.label}: ${winnerText(DATA.mvp)}`, 'hl');
+        printLine(`${DATA.secondary.label}: ${winnerText(DATA.secondary)}`, 'hl');
+        if (DATA.tertiary) printLine(`${DATA.tertiary.label}: ${winnerText(DATA.tertiary)}`, 'hl');
+        Object.entries(DATA.other).forEach(([k, v]) => printLine(`${k.toUpperCase()}: ${v}`, 'hl'));
+      } else if (lower.startsWith('stats ')) {
+        const q = cmd.slice(6);
+        const p = findPlayer(q);
+        if (p) {
+          printLine(`${p.name} (${p.team})`);
+          printLine(`  ${p.note}`);
+        } else {
+          printLine(`No finalist matching "${q}" in this dataset.`, 'err');
+        }
+      } else if (lower.includes('who won mvp') || lower.includes('mvp winner')) {
+        printLine(`${winnerText(DATA.mvp)} — ${DATA.mvp.label}.`, 'hl');
+      } else if (lower.includes('who won') ) {
+        // try to match secondary/tertiary by keyword
+        if (DATA.secondary.keywords.some(k => lower.includes(k))) {
+          printLine(`${winnerText(DATA.secondary)} — ${DATA.secondary.label}.`, 'hl');
+        } else if (DATA.tertiary && DATA.tertiary.keywords.some(k => lower.includes(k))) {
+          printLine(`${winnerText(DATA.tertiary)} — ${DATA.tertiary.label}.`, 'hl');
+        } else {
+          let found = false;
+          for (const [k, v] of Object.entries(DATA.other)) {
+            if (lower.includes(k.split(' ')[0])) { printLine(v, 'hl'); found = true; break; }
+          }
+          if (!found) { printLine('Not sure which award you mean — try "awards" to see the full list.', 'err'); }
+        }
+      } else if (lower === 'ls') {
+        printLine('mvp_analyzer.py  secondary_analyzer.py  awards.json  README.md');
+      } else {
+        printLine(`command not found: ${cmd}`, 'err');
+        printLine('type "help" to see available commands.');
+      }
+      printBlank();
+    }
+
+    termInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') { handleCommand(termInput.value); termInput.value = ''; }
+    });
+    termBody.addEventListener('click', () => termInput.focus());
+  }
+
+  // ---------- LIVE BACKEND CONNECTION ----------
+  // Change this if your Flask server is running on a different port
+  // (macOS AirPlay Receiver often squats on 5000, hence 5001 here).
+  const API_BASE = 'http://localhost:5001';
+
+  function normalizeFinalists(list) {
+    if (!Array.isArray(list)) return [];
+    return list.map(f => {
+      if (typeof f === 'string') return { name: f, team: '', note: '' };
+      const statsStr = f.stats
+        ? Object.entries(f.stats).map(([k, v]) => `${k.toUpperCase()}: ${v}`).join(', ')
+        : '';
+      let note = f.note || '';
+      if (statsStr) note = note ? `${statsStr} — ${note}` : statsStr;
+      if (!note) note = f.result || f.vote_summary || '';
+      return { name: f.name, team: f.team || '', note };
+    });
+  }
+
+  function adaptNba(raw) {
+    return {
+      mvp: { label: 'MVP', winner: raw.mvp.winner, finalists: normalizeFinalists(raw.mvp.finalists) },
+      secondary: {
+        label: 'DPOY', winner: raw.defensive_player_of_the_year.winner, keywords: ['dpoy', 'defensive player'],
+        finalists: normalizeFinalists(raw.defensive_player_of_the_year.finalists)
+      },
+      tertiary: {
+        label: 'Sixth Man of the Year', winner: raw.sixth_man_of_the_year.winner, keywords: ['sixth man', '6th man'],
+        finalists: normalizeFinalists(raw.sixth_man_of_the_year.finalists)
+      },
+      other: {
+        'most improved player': `${raw.most_improved_player.winner} (${raw.most_improved_player.team}) — Most Improved Player.`,
+        'rookie of the year': `${raw.rookie_of_the_year.winner} (${raw.rookie_of_the_year.team}) — Rookie of the Year.`,
+        'coach of the year': `${raw.coach_of_the_year.winner} (${raw.coach_of_the_year.team}) — Coach of the Year.`
+      }
+    };
+  }
+
+  function adaptNfl(raw) {
+    return {
+      mvp: { label: 'MVP', winner: raw.mvp.winner, finalists: normalizeFinalists(raw.mvp.finalists) },
+      secondary: {
+        label: 'Defensive Player of the Year', winner: raw.defensive_player_of_the_year.winner, keywords: ['dpoy', 'defensive player'],
+        finalists: normalizeFinalists(raw.defensive_player_of_the_year.finalists)
+      },
+      tertiary: {
+        label: 'Offensive Player of the Year', winner: raw.offensive_player_of_the_year.winner, keywords: ['opoy', 'offensive player'],
+        finalists: normalizeFinalists(raw.offensive_player_of_the_year.finalists)
+      },
+      other: {
+        'offensive rookie of the year': `${raw.offensive_rookie_of_the_year.winner} (${raw.offensive_rookie_of_the_year.team}, ${raw.offensive_rookie_of_the_year.position}) — Offensive Rookie of the Year.`,
+        'defensive rookie of the year': `${raw.defensive_rookie_of_the_year.winner} (${raw.defensive_rookie_of_the_year.team}, ${raw.defensive_rookie_of_the_year.position}) — Defensive Rookie of the Year.`,
+        'comeback player of the year': `${raw.comeback_player_of_the_year.winner} (${raw.comeback_player_of_the_year.team}) — Comeback Player of the Year.`,
+        'coach of the year': `${raw.coach_of_the_year.winner} (${raw.coach_of_the_year.team}) — Coach of the Year.`,
+        'assistant coach of the year': `${raw.assistant_coach_of_the_year.winner} (${raw.assistant_coach_of_the_year.team}, ${raw.assistant_coach_of_the_year.role}) — Assistant Coach of the Year.`,
+        'protector of the year': `${raw.protector_of_the_year.winner} (${raw.protector_of_the_year.team}, ${raw.protector_of_the_year.position}) — Protector of the Year.`
+      }
+    };
+  }
+
+  function adaptMlb(raw) {
+    return {
+      mvp: {
+        label: 'MVP',
+        winner: [`${raw.mvp.AL.winner} (AL)`, `${raw.mvp.NL.winner} (NL)`],
+        keywords: ['mvp'],
+        finalists: [...normalizeFinalists(raw.mvp.AL.finalists), ...normalizeFinalists(raw.mvp.NL.finalists)]
+      },
+      secondary: {
+        label: 'Cy Young',
+        winner: [`${raw.cy_young.AL.winner} (AL)`, `${raw.cy_young.NL.winner} (NL)`],
+        keywords: ['cy young'],
+        finalists: normalizeFinalists([
+          { name: raw.cy_young.AL.winner, team: raw.cy_young.AL.team, note: raw.cy_young.AL.note },
+          { name: raw.cy_young.NL.winner, team: raw.cy_young.NL.team, note: `${raw.cy_young.NL.vote_summary || ''} ${raw.cy_young.NL.note || ''}`.trim() }
+        ])
+      },
+      tertiary: {
+        label: 'Rookie of the Year',
+        winner: [`${raw.rookie_of_the_year.AL.winner} (AL)`, `${raw.rookie_of_the_year.NL.winner} (NL)`],
+        keywords: ['rookie'],
+        finalists: normalizeFinalists([
+          { name: raw.rookie_of_the_year.AL.winner, team: raw.rookie_of_the_year.AL.team, stats: raw.rookie_of_the_year.AL.stats, note: raw.rookie_of_the_year.AL.note },
+          { name: raw.rookie_of_the_year.NL.winner, team: raw.rookie_of_the_year.NL.team, note: raw.rookie_of_the_year.NL.note }
+        ])
+      },
+      other: {
+        'world series': `${raw.world_series.champion} — ${raw.world_series.note || 'World Series champions.'}`,
+        'al manager of the year': `${raw.manager_of_the_year.AL.winner} (${raw.manager_of_the_year.AL.team}) — AL Manager of the Year.`,
+        'nl manager of the year': `${raw.manager_of_the_year.NL.winner} (${raw.manager_of_the_year.NL.team}) — NL Manager of the Year.`,
+        'comeback player of the year': `${raw.comeback_player_of_the_year.AL.winner} (AL, ${raw.comeback_player_of_the_year.AL.team}) and ${raw.comeback_player_of_the_year.NL.winner} (NL, ${raw.comeback_player_of_the_year.NL.team}).`
+      }
+    };
+  }
+
+  async function fetchLeague(league) {
+    const res = await fetch(`${API_BASE}/api/${league}/awards`, { mode: 'cors' });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    return res.json();
+  }
+
+  async function initTerminal(league, bodyId, inputId, adapter, fallbackData) {
+    const termBody = document.getElementById(bodyId);
+    try {
+      const raw = await fetchLeague(league);
+      const data = adapter(raw);
+      buildTerminal(bodyId, inputId, data, league.toUpperCase());
+      const inputRow = termBody.querySelector('.terminal-input-row');
+      const statusLine = document.createElement('div');
+      statusLine.className = 'term-line hl';
+      statusLine.textContent = `[connected to live backend at ${API_BASE}]`;
+      termBody.insertBefore(statusLine, inputRow);
+    } catch (err) {
+      buildTerminal(bodyId, inputId, fallbackData, league.toUpperCase());
+      const inputRow = termBody.querySelector('.terminal-input-row');
+      const statusLine = document.createElement('div');
+      statusLine.className = 'term-line err';
+      statusLine.textContent = `[backend not reachable at ${API_BASE} — using built-in cached dataset. Run "python app.py" in /backend to go live.]`;
+      termBody.insertBefore(statusLine, inputRow);
+    }
+  }
+
+  // ---------- NBA DATA (fallback if backend is offline) ----------
+  const NBA_DATA = {
+    mvp: {
+      label: 'MVP',
+      winner: 'Shai Gilgeous-Alexander',
+      finalists: [
+        { name: 'Shai Gilgeous-Alexander', team: 'OKC', note: '31.1 PPG, 6.6 APG, 4.3 RPG — 83/100 first-place votes, back-to-back MVP' },
+        { name: 'Nikola Jokić', team: 'DEN', note: '27.7 PPG, 12.9 RPG, 10.7 APG — runner-up' },
+        { name: 'Victor Wembanyama', team: 'SAS', note: '25.0 PPG, 11.5 RPG, 3.1 BPG — 3rd, also won DPOY' }
+      ]
+    },
+    secondary: {
+      label: 'DPOY',
+      winner: 'Victor Wembanyama',
+      keywords: ['dpoy', 'defensive player'],
+      finalists: [
+        { name: 'Victor Wembanyama', team: 'SAS', note: 'unanimous, 100/100 votes, led NBA with 3.1 BPG (197 total)' },
+        { name: 'Chet Holmgren', team: 'OKC', note: '2nd place' },
+        { name: 'Ausar Thompson', team: 'DET', note: '3rd place' }
+      ]
+    },
+    tertiary: {
+      label: 'Sixth Man of the Year',
+      winner: 'Keldon Johnson',
+      keywords: ['sixth man', '6th man'],
+      finalists: [
+        { name: 'Keldon Johnson', team: 'SAS', note: '13.2 PPG, 5.4 RPG, franchise-record 1,081 bench points' },
+        { name: 'Jaime Jaquez Jr.', team: 'MIA', note: 'led all reserves in scoring for the Heat' },
+        { name: 'Tim Hardaway Jr.', team: 'DEN', note: '205 threes as a reserve, most in NBA' }
+      ]
+    },
+    other: {
+      'most improved player': 'Nickeil Alexander-Walker (Atlanta Hawks) — Most Improved Player.',
+      'rookie of the year': 'Cooper Flagg (Dallas Mavericks) — Rookie of the Year, over VJ Edgecombe and Kon Knueppel.',
+      'coach of the year': 'Joe Mazzulla (Boston Celtics) — Coach of the Year, 56 wins.'
+    }
+  };
+
+  // ---------- NFL DATA ----------
+  const NFL_DATA = {
+    mvp: {
+      label: 'MVP',
+      winner: 'Matthew Stafford',
+      finalists: [
+        { name: 'Matthew Stafford', team: 'LAR', note: '4,707 pass yds, 46 TD, 8 INT, 109.2 rating — 366 pts (24 first-place votes)' },
+        { name: 'Drake Maye', team: 'NE', note: 'runner-up — 361 pts (23 first-place votes), closest MVP race since 2003' },
+        { name: 'Josh Allen', team: 'BUF', note: '3,668 pass yds, 39 total TD, 579 rush yds' }
+      ]
+    },
+    secondary: {
+      label: 'Defensive Player of the Year',
+      winner: 'Myles Garrett',
+      keywords: ['dpoy', 'defensive player'],
+      finalists: [
+        { name: 'Myles Garrett', team: 'CLE', note: 'unanimous winner, NFL-record 23 sacks in a season, 2x DPOY' }
+      ]
+    },
+    tertiary: {
+      label: 'Offensive Player of the Year',
+      winner: 'Jaxon Smith-Njigba',
+      keywords: ['opoy', 'offensive player'],
+      finalists: [
+        { name: 'Jaxon Smith-Njigba', team: 'SEA', note: 'led NFL with 1,793 receiving yards — 272 pts (14 first-place votes)' },
+        { name: 'Christian McCaffrey', team: 'SF', note: '2,126 scrimmage yards — 223 pts (12 first-place votes)' },
+        { name: 'Puka Nacua', team: 'LAR', note: '3rd — 170 pts (8 first-place votes)' }
+      ]
+    },
+    other: {
+      'offensive rookie of the year': 'Tetairoa McMillan (Carolina Panthers, WR) — Offensive Rookie of the Year.',
+      'defensive rookie of the year': 'Carson Schwesinger (Cleveland Browns, LB) — Defensive Rookie of the Year.',
+      'comeback player of the year': 'Christian McCaffrey (San Francisco 49ers) — Comeback Player of the Year.',
+      'coach of the year': 'Mike Vrabel (New England Patriots) — Coach of the Year.',
+      'assistant coach of the year': 'Josh McDaniels (New England Patriots, OC) — Assistant Coach of the Year.',
+      'protector of the year': 'Joe Thuney (Chicago Bears, G) — inaugural Protector of the Year.'
+    }
+  };
+
+  // ---------- MLB DATA ----------
+  const MLB_DATA = {
+    mvp: {
+      label: 'MVP',
+      winner: ['Aaron Judge (AL)', 'Shohei Ohtani (NL)'],
+      keywords: ['mvp'],
+      finalists: [
+        { name: 'Aaron Judge', team: 'NYY', note: '.331 AVG, 53 HR, 1.144 OPS — AL MVP, 355 pts (17 first-place votes)' },
+        { name: 'Cal Raleigh', team: 'SEA', note: 'AL runner-up — 335 pts (13 first-place votes)' },
+        { name: 'Shohei Ohtani', team: 'LAD', note: '55 HR, 2.87 ERA as SP — unanimous NL MVP, 3rd straight, 4th career' },
+        { name: 'Kyle Schwarber', team: 'PHI', note: 'NL runner-up — 56 HR' }
+      ]
+    },
+    secondary: {
+      label: 'Cy Young',
+      winner: ['Tarik Skubal (AL)', 'Paul Skenes (NL)'],
+      keywords: ['cy young'],
+      finalists: [
+        { name: 'Tarik Skubal', team: 'DET', note: 'AL Cy Young, 2nd straight year' },
+        { name: 'Paul Skenes', team: 'PIT', note: 'unanimous NL Cy Young — 1.97 ERA, 216 K, MLB ERA crown' }
+      ]
+    },
+    tertiary: {
+      label: 'Rookie of the Year',
+      winner: ['Nick Kurtz (AL)', 'Drake Baldwin (NL)'],
+      keywords: ['rookie'],
+      finalists: [
+        { name: 'Nick Kurtz', team: 'ATH', note: 'unanimous AL Rookie of the Year — 36 HR, 1.002 OPS' },
+        { name: 'Drake Baldwin', team: 'ATL', note: 'NL Rookie of the Year — C, 19 HR, .810 OPS' }
+      ]
+    },
+    other: {
+      'world series': 'Los Angeles Dodgers def. Toronto Blue Jays — back-to-back World Series champions.',
+      'world series mvp': 'Yoshinobu Yamamoto (Dodgers, RHP) — 2025 World Series MVP.',
+      'al manager of the year': 'Stephen Vogt (Cleveland Guardians) — 2nd straight AL Manager of the Year.',
+      'nl manager of the year': 'Pat Murphy (Milwaukee Brewers) — 2nd straight NL Manager of the Year.',
+      'comeback player of the year': 'Jacob deGrom (Rangers, AL) and Ronald Acuña Jr. (Braves, NL).',
+      'hank aaron award': 'Aaron Judge (Yankees, AL) and Shohei Ohtani (Dodgers, NL).'
+    }
+  };
+
+  initTerminal('nba', 'termBodyNba', 'termInputNba', adaptNba, NBA_DATA);
+  initTerminal('nfl', 'termBodyNfl', 'termInputNfl', adaptNfl, NFL_DATA);
+  initTerminal('mlb', 'termBodyMlb', 'termInputMlb', adaptMlb, MLB_DATA);
+</script>
+
+</body>
+</html>
